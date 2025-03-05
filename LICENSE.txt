@@ -8,7 +8,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 All scripts related to custom attributes are provided without restrictions
 Users are free to use, copy, modify, distribute, and incorporate them into any project, with or without attribution
 
-2.License for the Object Finder Script
+2. License for the Game Objects Finder Script
 May be used, copied, modified, and included in projects, including commercial ones
 Selling this script as a standalone product or as part of a script collection is strictly prohibited
 If used in an open-source project (e.g., on GitHub), a reference to the original repository must be included
