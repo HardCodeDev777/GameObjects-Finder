@@ -1,0 +1,19 @@
+HardCodeDev License (Modified MIT)
+
+Copyright (c) 2025 HardCodeDev
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to use, copy, modify, merge, publish, distribute, and/or include copies of the Software in their projects, including commercial ones, subject to the following conditions:
+
+1. License for Attribute Scripts
+All scripts related to custom attributes are provided without restrictions
+Users are free to use, copy, modify, distribute, and incorporate them into any project, with or without attribution
+
+2.License for the Object Finder Script
+May be used, copied, modified, and included in projects, including commercial ones
+Selling this script as a standalone product or as part of a script collection is strictly prohibited
+If used in an open-source project (e.g., on GitHub), a reference to the original repository must be included
+If modified and redistributed, it must be stated that the script is based on the original work of HardCodeDev
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+The author is not responsible for any misuse of this software, including but not limited to illegal activities, violations of terms of service, or any damage caused by its use. 
