@@ -59,7 +59,7 @@ namespace HardCodeDev.GameObjectsFinderScript
             if (findedMaterial != null && gameObjTag != null)
             {
                 // Clears materials initially to avoid bugs when switching tags without clearing first
-                ClearMaterialsBase(findedGameObjsByTag, defaultMaterialsByTag, true);
+                ClearGameObjectsBase(findedGameObjsByTag, defaultMaterialsByTag, true);
 
                 // In case the tag was deleted
                 try
@@ -75,14 +75,10 @@ namespace HardCodeDev.GameObjectsFinderScript
                             {
                                 // Add the pair gameObj - renderer.sharedMaterial to the dictionary
                                 defaultMaterialsByTag[gameObj] = renderer.sharedMaterial;
-                                findedGameObjsByTag.Add(gameObj);
                             }
                             renderer.sharedMaterial = findedMaterial;
                         }
-                        else
-                        {
-                            Debug.Log("<color=yellow> The object(s) with this tag do not have a MeshRenderer component.");
-                        }
+                        findedGameObjsByTag.Add(gameObj);
                     }
                 }
                 catch (UnityException ex)
@@ -102,8 +98,9 @@ namespace HardCodeDev.GameObjectsFinderScript
             else Debug.LogError("No material assigned in Finded Material or no tag selected! Set values in the inspector.");
         }
 
+        // Clears the list of found GameObjects by tag and restores their original materials to each of them
         [FuncButton]
-        public void ClearAllMaterialsFromMeshByTag() => ClearMaterialsBase(findedGameObjsByTag, defaultMaterialsByTag);
+        public void ClearAllFindedGameObjectsByTag() => ClearGameObjectsBase(findedGameObjsByTag, defaultMaterialsByTag);
         #endregion
 
         #region Objects by Script
@@ -124,17 +121,10 @@ namespace HardCodeDev.GameObjectsFinderScript
                             GameObject gameObj = component.gameObject;
                             if (gameObj.TryGetComponent(out MeshRenderer renderer))
                             {
-                                if (!defaultMaterialsByScript.ContainsKey(gameObj))
-                                {
-                                    defaultMaterialsByScript[gameObj] = renderer.sharedMaterial;
-                                    findedGameObjsByScript.Add(gameObj);
-                                }
+                                if (!defaultMaterialsByScript.ContainsKey(gameObj)) defaultMaterialsByScript[gameObj] = renderer.sharedMaterial;
                                 renderer.sharedMaterial = findedMaterial;
                             }
-                            else
-                            {
-                                Debug.Log("<color=yellow> The object(s) with this script do not have a MeshRenderer component.");
-                            }
+                            findedGameObjsByScript.Add(gameObj);
                         }
                     }
                 }
@@ -157,10 +147,10 @@ namespace HardCodeDev.GameObjectsFinderScript
         }
 
         [FuncButton]
-        public void ClearAllMaterialsFromMeshByScript() => ClearMaterialsBase(findedGameObjsByScript, defaultMaterialsByScript);
+        public void ClearAllFindedGameObjectsByScript() => ClearGameObjectsBase(findedGameObjsByScript, defaultMaterialsByScript);
         #endregion
 
-        private void ClearMaterialsBase(List<GameObject> findedGameObjs, Dictionary<GameObject, Material> defaultMaterials, bool isInFinder = false)
+        private void ClearGameObjectsBase(List<GameObject> findedGameObjs, Dictionary<GameObject, Material> defaultMaterials, bool isInFinder = false)
         {
             if (findedGameObjs.Count != 0)
             {
@@ -171,6 +161,7 @@ namespace HardCodeDev.GameObjectsFinderScript
                         try
                         {
                             gameObj.GetComponent<MeshRenderer>().sharedMaterial = originalMat;
+                            if (enableExtraDebug && !isInFinder) Debug.Log("<color=green>Materials cleared successfully.");
                         }
                         catch
                         {
@@ -180,7 +171,6 @@ namespace HardCodeDev.GameObjectsFinderScript
                 }
                 findedGameObjs.Clear();
                 defaultMaterials.Clear();
-                if (enableExtraDebug && !isInFinder) Debug.Log("<color=green>Materials cleared successfully.");
             }
             else
             {

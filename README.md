@@ -13,8 +13,6 @@ Game Objects Finder is a Unity Editor tool designed to streamline object searchi
 
 ## **How to Use**
 
-**The script won't find GameObjects that don't have a MeshRenderer component!**
-
 The `GameObjectsFinder` script provides a simple way to search for objects in the scene using the Unity Inspector. You can:
 
 -   **Search by Tag** – Enter a tag name to find all objects with that tag.  
