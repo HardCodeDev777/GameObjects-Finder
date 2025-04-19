@@ -5,153 +5,258 @@
 // If modified and redistributed, it must be stated that the script is based on the original work of HardCodeDev.
 // Full license details can be found in LICENSE.txt.
 
+using System;
+using System.IO;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
-using HardCodeDev.Attributes;
 
-namespace HardCodeDev.GameObjectsFinderScript
+#if UNITY_EDITOR
+namespace HardCodeDev.GameObjectsFinder
 {
-    public class GameObjectsFinder : MonoBehaviour
+    #region Other
+    public enum TypeOfObjects
+    {
+        Script,
+        Tag
+    }
+
+    [Serializable]
+    public struct GlobalIdBasic
+    {
+        public string globalId, materialPath;
+    }
+
+    [Serializable]
+    public class GlobalID 
+    {
+        public string findedMat;
+        public List<GlobalIdBasic> tagObjects = new(), scriptObjects = new();
+    }
+    #endregion
+
+    #region Main Script
+    public class GameObjectsFinder : EditorWindow
     {
         #region Variables
-        [Header("Search by Tag")]
-        // Enable additional debugging?
-        [SerializeField, Tooltip("Enables additional Debug logs. Turn it on if you need extra debugging (recommended).")]
-        private bool enableExtraDebug;
+        private bool enableExtraDebug, saveToJson, clearedByScript, clearedByTag;
 
-        // Tag to search objects by
-        [SerializeField, TagFind, Tooltip("Tag to search objects by.")]
-        private string gameObjTag;
+        private string gameObjTag, scriptName, JSONpath;
 
-        // Material to apply to found objects
-        [SerializeField, VarNull(1, 0, 0, 1), Tooltip("Material to apply to found objects.")]
+        private List<GameObject> findedGameObjsByTag = new(), findedGameObjsByScript = new();
+
+        private Dictionary<GameObject, Material> defaultMaterialsByTag = new(), defaultMaterialsByScript = new();
+
         private Material findedMaterial;
-
-        // Found objects by tag
-        [SerializeField, InteractableVar(false), Tooltip("Objects found with the specified tag.")]
-        private List<GameObject> findedGameObjsByTag = new List<GameObject>();
-
-        // Original materials when searching by tag
-        private Dictionary<GameObject, Material> defaultMaterialsByTag = new Dictionary<GameObject, Material>();
-
-        //---------------------------------------------------------------------------------------------------------------------------
-
-        // Script name to search objects by
-        [Header("Search by Script")]
-        [SerializeField, Tooltip("Script name to search objects by. If script in namespace, also write namespace with script name. Example: MyNamespace.MyScript")]
-        private string scriptName;
-
-        // Found objects by script
-        [SerializeField, InteractableVar(false), Tooltip("Objects found with the specified script.")]
-        private List<GameObject> findedGameObjsByScript = new List<GameObject>();
-
-        // Original materials when searching by script
-        private Dictionary<GameObject, Material> defaultMaterialsByScript = new Dictionary<GameObject, Material>();
         #endregion
 
-        #region Objects by Tag
-        /// <summary>
-        /// Finds all objects with the selected tag.
-        /// </summary>
-        [FuncButton]
-        public void FindObjectsByTag()
+        #region GUI
+        [MenuItem("Finder/GameObjects Finder")]
+        public static void ShowWindow() => GetWindow<GameObjectsFinder>("GameObjects Finder");
+
+        private void OnEnable()
         {
-            if (findedMaterial != null && gameObjTag != null)
-            {
-                // Clears materials initially to avoid bugs when switching tags without clearing first
-                ClearGameObjectsBase(findedGameObjsByTag, defaultMaterialsByTag, true);
+            // Values for GameObjectsFinderDemo scene.
 
-                // In case the tag was deleted
-                try
-                {
-                    var gameObjs = GameObject.FindGameObjectsWithTag(gameObjTag);
-                    foreach (var gameObj in gameObjs)
-                    {
-                        // Attempts to get the MeshRenderer component from objects
-                        if (gameObj.TryGetComponent(out MeshRenderer renderer))
-                        {
-                            // If the dictionary <GameObject, Material> does not contain the current object
-                            if (!defaultMaterialsByTag.ContainsKey(gameObj))
-                            {
-                                // Add the pair gameObj - renderer.sharedMaterial to the dictionary
-                                defaultMaterialsByTag[gameObj] = renderer.sharedMaterial;
-                            }
-                            renderer.sharedMaterial = findedMaterial;
-                        }
-                        findedGameObjsByTag.Add(gameObj);
-                    }
-                }
-                catch (UnityException ex)
-                {
-                    Debug.LogError($"The tag does not exist! It may have been deleted. Error message: {ex.Message}");
-                }
+            saveToJson = true;
 
-                if (findedGameObjsByTag.Count > 0)
-                {
-                    if (enableExtraDebug) Debug.Log($"<color=green>{findedGameObjsByTag.Count} objects found!");
-                }
-                else
-                {
-                    if (enableExtraDebug) Debug.Log("<color=yellow>No objects found!");
-                }
-            }
-            else Debug.LogError("No material assigned in Finded Material or no tag selected! Set values in the inspector.");
+            gameObjTag = "Player";
+            scriptName = "HardCodeDev.Examples.EmptyDemoScript";
+            JSONpath = "Assets/Data.json";
         }
 
-        // Clears the list of found GameObjects by tag and restores their original materials to each of them
-        [FuncButton]
-        public void ClearAllFindedGameObjectsByTag() => ClearGameObjectsBase(findedGameObjsByTag, defaultMaterialsByTag);
+        private void OnGUI()
+        {
+            GUILayout.Label("Base", EditorStyles.boldLabel);
+
+            enableExtraDebug = EditorGUILayout.Toggle(
+                new GUIContent("Enable extra debugging", "Enables additional Debug logs. Turn it on if you need extra debugging (recommended)."),
+                enableExtraDebug);
+
+            EditorGUILayout.Space(5);
+
+            saveToJson = EditorGUILayout.Toggle(
+    new GUIContent("Save to JSON", "Automatically saves found GameObjects to JSON by their Global ID, their materials before finding and applied material."),
+    saveToJson);
+
+            if (saveToJson)
+            {
+                JSONpath = EditorGUILayout.TextField(
+                new GUIContent("JSON data save path ", "Example: Assets/Data.json"), JSONpath);
+
+                if (GUILayout.Button(
+                    new GUIContent("Load JSON data")))
+                    LoadFromJSON();
+                if (GUILayout.Button("Clear JSON file")) ClearJSON();
+            }
+
+            EditorGUILayout.Space(5);
+
+            findedMaterial = (Material)EditorGUILayout.ObjectField(
+                new GUIContent("Applied material", "Material to apply to found objects."),
+                findedMaterial, typeof(Material), true);
+
+            EditorGUILayout.Space(10);
+
+            GUILayout.Label("Search by Tag", EditorStyles.boldLabel);
+            gameObjTag = EditorGUILayout.TagField(
+                new GUIContent("GameObjects tag", "Tag to search objects by"),
+                gameObjTag);
+
+            EditorGUILayout.Space(10);
+
+            GUILayout.Label("Search by Script", EditorStyles.boldLabel);
+            scriptName = EditorGUILayout.TextField(
+                new GUIContent("GameObjects full script name", "Full name of the script (with namespace if needed). Example: MyNamespace.MyScript"),
+                scriptName);
+
+            EditorGUILayout.Space(10);
+
+            GUILayout.Label("Finding", EditorStyles.boldLabel);
+
+            if (GUILayout.Button("Find Game Objects by Tag")) FindGameObjects(TypeOfObjects.Tag);
+            if (GUILayout.Button("Clear Game Objects by Tag")) ClearMaterials(TypeOfObjects.Tag);
+            EditorGUILayout.Space(10);
+
+            if (GUILayout.Button("Find Game Objects by Script")) FindGameObjects(TypeOfObjects.Script);
+            if (GUILayout.Button("Clear Game Objects by Script")) ClearMaterials(TypeOfObjects.Script);
+
+
+            EditorGUILayout.Space(10);
+
+            DrawList(TypeOfObjects.Script);
+            DrawList(TypeOfObjects.Tag);
+        }
+
+        private void DrawList(TypeOfObjects type)
+        {
+            List<GameObject> finded = new();
+
+            finded = type == TypeOfObjects.Tag ? findedGameObjsByTag: findedGameObjsByScript;
+            var cleared = type == TypeOfObjects.Tag ? clearedByTag : clearedByScript;
+
+            if (finded != null)
+            {
+                for (int i = 0; i < finded.Count; i++)
+                {
+                    if (!cleared)
+                    {
+                        EditorGUILayout.BeginHorizontal();
+
+                        finded[i] = type == TypeOfObjects.Tag ?
+                            (GameObject)EditorGUILayout.ObjectField("By Tag: ", finded[i], typeof(GameObject), true)
+                            : (GameObject)EditorGUILayout.ObjectField("By Script: ", finded[i], typeof(GameObject), true);
+
+                        EditorGUILayout.EndHorizontal();
+                    }
+                    else
+                    {
+                        finded.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+        }
         #endregion
 
-        #region Objects by Script
-        [FuncButton]
-        public void FindObjectsByScript()
+        #region Core
+        private void FindGameObjects(TypeOfObjects type)
         {
-            if (scriptName != null)
+            if (type == TypeOfObjects.Tag)
             {
-                System.Type scriptType = System.Type.GetType(scriptName);
-                if (scriptType != null)
+                if (gameObjTag != null)
                 {
-                    var scripts = FindObjectsByType(scriptType, FindObjectsSortMode.None);
-                    foreach (var script in scripts)
+                    ClearMaterials(TypeOfObjects.Tag, true);
+                    clearedByTag = false;
+
+                    try
                     {
-                        Component component = script as Component;
-                        if (component != null)
+                        var gameObjs = GameObject.FindGameObjectsWithTag(gameObjTag);
+                        foreach (var gameObj in gameObjs)
                         {
-                            GameObject gameObj = component.gameObject;
                             if (gameObj.TryGetComponent(out MeshRenderer renderer))
                             {
-                                if (!defaultMaterialsByScript.ContainsKey(gameObj)) defaultMaterialsByScript[gameObj] = renderer.sharedMaterial;
+                                if (!defaultMaterialsByTag.ContainsKey(gameObj)) defaultMaterialsByTag[gameObj] = renderer.sharedMaterial;
                                 renderer.sharedMaterial = findedMaterial;
                             }
-                            findedGameObjsByScript.Add(gameObj);
+                            findedGameObjsByTag.Add(gameObj);
                         }
+                        if (saveToJson) SaveToJSON();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"The tag does not exist! It may have been deleted. Error message: {ex.Message}");
+                    }
+
+                    if (findedGameObjsByTag.Count > 0)
+                    {
+                        if (enableExtraDebug) Debug.Log($"<color=green>{findedGameObjsByTag.Count} objects found!");
+                    }
+                    else
+                    {
+                        if (enableExtraDebug) Debug.Log("<color=yellow>No objects found!");
                     }
                 }
-                else
-                {
-                    if (enableExtraDebug) Debug.Log("<color=yellow>No objects found with this script.");
-                }
-
-                if (findedGameObjsByScript.Count > 0)
-                {
-                    if (enableExtraDebug) Debug.Log($"<color=green>{findedGameObjsByScript.Count} objects found!");
-                }
-
-                else
-                {
-                    if (enableExtraDebug) Debug.Log("<color=yellow>No objects found with this script.");
-                }
+                else Debug.LogError("No tag entered in GameObjects tag!"); 
             }
-            else Debug.LogError("No script name entered in Script Name!");
+
+            if (type == TypeOfObjects.Script)
+            {
+                if (scriptName != null)
+                {
+                    ClearMaterials(TypeOfObjects.Script, true);
+                    clearedByScript = false;
+
+                    Type scriptType = Type.GetType(scriptName);
+                    if (scriptType != null)
+                    {
+                        var scripts = FindObjectsByType(scriptType, FindObjectsSortMode.None);
+                        foreach (var script in scripts)
+                        {
+                            Component component = script as Component;
+                            if (component != null)
+                            {
+                                GameObject gameObj = component.gameObject;
+                                if (gameObj.TryGetComponent(out MeshRenderer renderer))
+                                {
+                                    if (!defaultMaterialsByScript.ContainsKey(gameObj)) defaultMaterialsByScript[gameObj] = renderer.sharedMaterial;
+                                    renderer.sharedMaterial = findedMaterial;
+                                }
+                                findedGameObjsByScript.Add(gameObj);
+                            }
+                        }
+                        if(saveToJson)SaveToJSON();
+                    }
+                    else
+                    {
+                        if (enableExtraDebug) Debug.Log("<color=yellow>No objects found with this script.");
+                    }
+
+                    if (findedGameObjsByScript.Count > 0)
+                    {
+                        if (enableExtraDebug) Debug.Log($"<color=green>{findedGameObjsByScript.Count} objects found!");
+                    }
+
+                    else
+                    {
+                        if (enableExtraDebug) Debug.Log("<color=yellow>No objects found with this script.");
+                    }
+                }
+                else Debug.LogError("No script name entered in GameObjects script name!"); 
+            }
         }
 
-        [FuncButton]
-        public void ClearAllFindedGameObjectsByScript() => ClearGameObjectsBase(findedGameObjsByScript, defaultMaterialsByScript);
-        #endregion
-
-        private void ClearGameObjectsBase(List<GameObject> findedGameObjs, Dictionary<GameObject, Material> defaultMaterials, bool isInFinder = false)
+        private void ClearMaterials(TypeOfObjects type, bool isInFinder = false)
         {
+            clearedByScript = type == TypeOfObjects.Tag ? false : true;
+            clearedByTag = type == TypeOfObjects.Tag ? true : false;
+
+            List<GameObject> findedGameObjs = new();
+            Dictionary<GameObject, Material> defaultMaterials = new();
+
+            findedGameObjs = type == TypeOfObjects.Tag ? findedGameObjsByTag : findedGameObjsByScript;
+            defaultMaterials = type == TypeOfObjects.Tag ? defaultMaterialsByTag : defaultMaterialsByScript;
+
             if (findedGameObjs.Count != 0)
             {
                 foreach (var gameObj in findedGameObjs)
@@ -161,11 +266,11 @@ namespace HardCodeDev.GameObjectsFinderScript
                         try
                         {
                             gameObj.GetComponent<MeshRenderer>().sharedMaterial = originalMat;
-                            if (enableExtraDebug && !isInFinder) Debug.Log("<color=green>Materials cleared successfully.");
+                            if (enableExtraDebug && !isInFinder) Debug.Log("<color=green>Materials cleared successfully!");
                         }
                         catch
                         {
-                            Debug.LogError("The MeshRenderer component was removed from the object(s) during material clearing!");
+                            Debug.LogError("The MeshRenderer component was removed from the GameObjects during material clearing!");
                         }
                     }
                 }
@@ -177,6 +282,150 @@ namespace HardCodeDev.GameObjectsFinderScript
                 if (enableExtraDebug && !isInFinder) Debug.Log("<color=yellow>No objects found for clearing.");
             }
         }
-    }
+        #endregion
 
+        #region JSON
+        private void SaveToJSON() 
+        {
+            if (JSONpath != null)
+            {
+                GlobalID global = new();
+
+                GlobalID globalExisted = new();
+                var jsonExisted = File.ReadAllText(JSONpath);
+                globalExisted = JsonUtility.FromJson<GlobalID>(jsonExisted);
+
+                if (findedGameObjsByScript != null)
+                {
+                    for (int i = 0; i < findedGameObjsByScript.Count; i++)
+                    {
+                        GlobalIdBasic basic = new();    
+                        var globalId = GlobalObjectId.GetGlobalObjectIdSlow(findedGameObjsByScript[i]).ToString();
+                        basic.globalId = globalId;
+
+
+                        if (findedGameObjsByScript[i].TryGetComponent(out MeshRenderer renderer)) 
+                        {
+                            var mat = defaultMaterialsByScript[findedGameObjsByScript[i]];
+                            string path = AssetDatabase.GetAssetPath(mat);
+                            basic.materialPath = path;
+                        }
+
+                        global.scriptObjects.Add(basic);
+                    }
+                    
+                    global.findedMat = AssetDatabase.GetAssetPath(findedMaterial);
+
+                    if (enableExtraDebug) Debug.Log("<color=green>Found by scrpt objects data saved to JSON successfully!");
+                }
+
+                if (findedGameObjsByTag != null)
+                {
+                    for (int i = 0; i < findedGameObjsByTag.Count; i++)
+                    {
+                        GlobalIdBasic basic = new();
+                        var globalId = GlobalObjectId.GetGlobalObjectIdSlow(findedGameObjsByTag[i]).ToString();
+                        basic.globalId = globalId;
+
+
+                        if (findedGameObjsByTag[i].TryGetComponent(out MeshRenderer renderer))
+                        {
+                            var mat = defaultMaterialsByTag[findedGameObjsByTag[i]];
+                            string path = AssetDatabase.GetAssetPath(mat);
+                            basic.materialPath = path;
+                        }
+
+                        global.tagObjects.Add(basic);
+                    }
+
+                    global.findedMat = AssetDatabase.GetAssetPath(findedMaterial);
+
+                    if (enableExtraDebug) Debug.Log("<color=green>Found by tag objects data saved to JSON successfully!");
+                }
+
+                var updatedJson = JsonUtility.ToJson(global, true);
+
+                File.WriteAllText(JSONpath, updatedJson);
+                AssetDatabase.Refresh();
+                if (enableExtraDebug) Debug.Log("<color=yellow>No found GameObjects with tag/script.");
+            }
+            else Debug.LogError("No JSON path was found!");
+        }
+
+        private void LoadFromJSON()
+        {
+            if (JSONpath != null)
+            {
+                GlobalID global = new();
+                string json = File.ReadAllText(JSONpath);
+
+                global = JsonUtility.FromJson<GlobalID>(json);
+
+                for (int i = 0; i < global.scriptObjects.Count; i++)
+                {
+                    var basic = global.scriptObjects[i];
+                    if (GlobalObjectId.TryParse(basic.globalId, out GlobalObjectId globalId))
+                    {
+                        UnityEngine.Object obj = GlobalObjectId.GlobalObjectIdentifierToObjectSlow(globalId);
+                        if (obj is GameObject)
+                        {
+                            var go = obj as GameObject;
+
+                            findedGameObjsByScript.Add(go);
+
+                            if (go.TryGetComponent(out MeshRenderer renderer)) renderer.sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>(global.findedMat);
+                            var loadedMat = AssetDatabase.LoadAssetAtPath<Material>(basic.materialPath);
+                            defaultMaterialsByScript[go] = loadedMat;
+                        }
+                    }
+                }
+
+                for (int i = 0; i < global.tagObjects.Count; i++)
+                {
+                    var basic = global.tagObjects[i];
+                    if (GlobalObjectId.TryParse(basic.globalId, out GlobalObjectId globalId))
+                    {
+                        UnityEngine.Object obj = GlobalObjectId.GlobalObjectIdentifierToObjectSlow(globalId);
+                        if (obj is GameObject)
+                        {
+                            var go = obj as GameObject;
+
+                            findedGameObjsByTag.Add(go);
+
+                            if (go.TryGetComponent(out MeshRenderer renderer)) renderer.sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>(global.findedMat);
+                            var loadedMat = AssetDatabase.LoadAssetAtPath<Material>(basic.materialPath);
+                            defaultMaterialsByTag[go] = loadedMat;
+                        }
+                    }
+                }
+
+                if (findedGameObjsByScript != null || findedGameObjsByTag != null)
+                {
+                    if (enableExtraDebug) Debug.Log("<color=green>Data loaded from JSON successfully!");
+                }
+                else
+                {
+                    if (enableExtraDebug) Debug.Log("<color=yellow>No saved data found in JSON file.");
+                }
+            }
+            else 
+            { 
+                if(saveToJson) Debug.LogError("No JSON path was found!"); 
+            }
+        }
+
+        private void ClearJSON()
+        {
+            if (JSONpath != null && File.Exists(JSONpath))
+            {
+                File.WriteAllText(JSONpath, "{}");
+                AssetDatabase.Refresh();
+                if (enableExtraDebug) Debug.Log("<color=green>JSON cleared successfully!");
+            }
+            else Debug.LogError("No JSON path was found or file on this path doesn't exist!"); 
+        }
+        #endregion
+    }
+    #endregion
 }
+#endif

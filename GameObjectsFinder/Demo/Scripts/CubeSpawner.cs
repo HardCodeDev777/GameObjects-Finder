@@ -1,5 +1,6 @@
 // This script is for demonstration purposes only and is not part of the utility itself.
 // You are free to use, modify, and distribute this code without restrictions.
+// Full license details can be found in LICENSE.txt.
 
 using UnityEngine;
 using HardCodeDev.Attributes;

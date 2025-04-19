@@ -1,19 +1,14 @@
-// Copyright (c) 2025 HardCodeDev
-// This code is provided without restrictions.
-// You may use, modify, and distribute it freely.
+// This script is for demonstration purposes only and is not part of the utility itself.
+// You are free to use, modify, and distribute this code without restrictions.
 // Full license details can be found in LICENSE.txt.
 
-
-#if UNITY_EDITOR
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+#if UNITY_EDITOR
 
 namespace HardCodeDev.Attributes
 {
-    /// <summary>
-    /// Source code for the FuncButton attribute.
-    /// </summary>
     [CustomEditor(typeof(MonoBehaviour), true)]
     public class FuncButtonDrawer : Editor
     {

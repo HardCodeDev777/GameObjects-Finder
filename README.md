@@ -1,48 +1,130 @@
-﻿# **Game Objects Finder**
+﻿
+# 🧩 GameObjects Finder — Unity Editor Tool
 
-![Before finding](before.png)
- ![After finding](after.png)
+> 🔎 Find, highlight, and manage GameObjects in your scene by **Tag** or **Script** — with material swapping, JSON saving, and verbose debug logging.
 
-## **Overview**
+![Before finding](before.png)  
+![After finding](after.png)
 
-Game Objects Finder is a Unity Editor tool designed to streamline object searching. It allows you to **find objects** in the scene based on their tag or attached script, improving efficiency when working in Unity.
+---
 
-Additionally, the package includes **custom attributes** to make the Unity Inspector more user-friendly and intuitive.
+## 🚀 Overview
 
-## **Installation**
+**GameObjects Finder** is a powerful Unity Editor utility designed to help you quickly locate and manage GameObjects in your scene using:
 
-1.  Download the ZIP file.
-2.  Extract it and import into your Unity project.
-3.  Add the **GameObjectFinder** prefab to your scene or attach the `GameObjectsFinder` script to any GameObject in your scene.
+- 🎯 **Tag-based search**
+- 🔧 **Script-based search**
+- 🎨 **Automatic material assignment to found GameObjects**
+- 💾 **JSON export & import**
+- 🐛 **Verbose debug logging**
 
-## **How to Use**
+Use it during level design, debugging, or testing to instantly locate and visualize the objects you're working with.
 
-The `GameObjectsFinder` script provides a simple way to search for objects in the scene using the Unity Inspector. You can:
+---
 
--   **Search by Tag** – Enter a tag name to find all objects with that tag.  
--   **Search by Script** – Enter a script name to find all objects that have that script attached.  
--   Use the **Inspector GUI** to input search parameters and execute searches via dedicated buttons.  
+## 📦 Installation
 
-📌 _The script includes detailed inline comments explaining its functionality._ 
+1. Download the ZIP archive.  
+2. Unzip and place the `GameObjectsFinder` folder inside your project's `Assets/` directory.  
+3. Unity will automatically compile the editor extension.  
 
-## **Demo Scene**
+No additional setup required.
 
-The package includes a **Game Objects Finder Demo** scene to showcase its capabilities:
+---
 
--   The scene features a plane with 16 spawn points.
--   Selecting the `CubeSpawner` object and pressing a button in the `CubeSpawner` script will spawn 16 cubes at random locations.
--   The spawned cubes have different properties:
-    -   Some are tagged as **"Player"**.
-    -   Some have the **EmptyDemoScript** attached.
-    -   Some are standard cubes without additional components.
--   Selecting the `GameObjectsFinder` object allows you to enter a tag or script name in the Inspector and quickly locate objects accordingly.
+## 🧰 Usage
 
-## **License**
+Open the utility from the top Unity menu:  
+`Finder → GameObjects Finder`.
 
-This project is licensed under the **HardCodeDev License (MIT-based, modified)**. See `LICENSE.txt` for details.
+Once opened, you’ll see the following window:
 
-## **Author**
+![Utility window](UtilityWindow.png)
 
--   **HardCodeDev**
--   [GitHub](https://github.com/HardCodeDev777)
--   [Itch.io](https://hardcodedev.itch.io/)
+
+The interface is divided into several sections that allow you to configure search settings, apply materials, and work with saved data.
+
+---
+
+### ⚙️ Base Settings
+
+| Setting                 | Description                                                                 |
+|------------------------|-----------------------------------------------------------------------------|
+| **Enable extra debug** | Enables verbose logging in the Console. Errors will also appear here.       |
+| **Save to JSON**       | If checked, all found GameObjects will be saved to a JSON file.             |
+| **JSON data path**     | Path to save or load JSON data (e.g. `Assets/Data.json`).                   |
+| **Clear JSON file**    | Clears all content from the selected JSON file.                             |
+| **Applied material**   | The material to apply to all found objects. Drag & drop a material here.    |
+
+---
+
+### 🏷️ Search by Tag
+
+| Setting                 | Description                                                                 |
+|------------------------|-----------------------------------------------------------------------------|
+| **GameObjects tag**     | Select the tag you want to search for using the dropdown.                  |
+
+---
+
+### 🧠 Search by Script
+
+| Setting                        | Description                                                                 |
+|-------------------------------|-----------------------------------------------------------------------------|
+| **GameObjects full script name** | Type the full name of the script, including its namespace, to search by.  |
+
+---
+
+### 🔍 Finding
+
+| Action                        | Description                                                                 |
+|------------------------------|-----------------------------------------------------------------------------|
+| **Find GameObjects by tag**    | Finds all GameObjects (even those without a MeshRenderer) with the selected tag. |
+| **Find GameObjects by script** | Finds all GameObjects (even those without a MeshRenderer) that have a component matching the script name. |
+
+---
+
+> 📌 **Note:** This is an **Editor-only tool**. It works inside the Unity Editor and does not require adding any MonoBehaviours to your scene.
+
+---
+
+
+## 🧪 Demo Scene
+
+The package includes a ready-to-use demo scene:
+
+- A flat plane with 16 spawn points  
+- A `CubeSpawner` button that spawns 16 randomized cubes  
+- Some cubes:
+  - Are tagged as **`Player`**
+  - Have the script **`EmptyDemoScript`** attached  
+- Others are plain cubes without tags or scripts
+
+Use the GameObjects Finder tool to test searching, filtering, and applying materials — only cubes with matching tags or scripts will be affected.
+
+
+---
+
+## 📄 License
+
+This tool is licensed under the **HardCodeDev License** (based on MIT).  
+You may:
+- Use, modify, and distribute it freely  
+
+But you **may not**:
+- Sell this script as a standalone product or as part of a paid script collection
+
+See [`LICENSE.txt`](LICENSE.txt) for full terms.
+
+---
+
+## 👨‍💻 Author
+
+**HardCodeDev**  
+- 🌐 [GitHub](https://github.com/HardCodeDev777)  
+- 🎮 [Itch.io](https://hardcodedev.itch.io/)
+
+---
+
+> 💬 Have suggestions, found bugs, or want to contribute? Open an issue or fork the project on GitHub!
+
+
