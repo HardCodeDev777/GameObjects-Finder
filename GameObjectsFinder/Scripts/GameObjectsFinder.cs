@@ -39,6 +39,8 @@ namespace HardCodeDev.GameObjectsFinder
     public class GameObjectsFinder : EditorWindow
     {
         #region Variables
+        private Vector2 scrollView;
+
         private bool enableExtraDebug, saveToJson, clearedByScript, clearedByTag;
 
         private string gameObjTag, scriptName, JSONpath;
@@ -51,7 +53,7 @@ namespace HardCodeDev.GameObjectsFinder
         #endregion
 
         #region GUI
-        [MenuItem("Finder/GameObjects Finder")]
+        [MenuItem("HardCodeDev/GameObjects Finder")]
         public static void ShowWindow() => GetWindow<GameObjectsFinder>("GameObjects Finder");
 
         private void OnEnable()
@@ -67,6 +69,8 @@ namespace HardCodeDev.GameObjectsFinder
 
         private void OnGUI()
         {
+            GUILayout.BeginScrollView(scrollView, true, false);
+
             GUILayout.Label("Base", EditorStyles.boldLabel);
 
             enableExtraDebug = EditorGUILayout.Toggle(
@@ -126,6 +130,8 @@ namespace HardCodeDev.GameObjectsFinder
 
             DrawList(TypeOfObjects.Script);
             DrawList(TypeOfObjects.Tag);
+
+            GUILayout.EndScrollView();
         }
 
         private void DrawList(TypeOfObjects type)

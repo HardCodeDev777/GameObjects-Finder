@@ -35,7 +35,7 @@ No additional setup required.
 ## 🧰 Usage
 
 Open the utility from the top Unity menu:  
-`Finder → GameObjects Finder`.
+`HardCodeDev → GameObjects Finder`.
 
 Once opened, you’ll see the following window:
 
