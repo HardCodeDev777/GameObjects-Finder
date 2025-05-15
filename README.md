@@ -1,4 +1,9 @@
-﻿
+![Unity](https://img.shields.io/badge/Unity-unity?logo=Unity&color=%23000000)
+![C#](https://img.shields.io/badge/C%23-%23512BD4?logo=.NET)
+![Last commit](https://img.shields.io/github/last-commit/HardCodeDev777/GameObjects-Finder?color=%2305991d)
+![TopLang](https://img.shields.io/github/languages/top/HardCodeDev777/GameObjects-Finder)
+
+ 
 # 🧩 GameObjects Finder — Unity Editor Tool
 
 > 🔎 Find, highlight, and manage GameObjects in your scene by **Tag** or **Script** — with material swapping, JSON saving, and verbose debug logging.
