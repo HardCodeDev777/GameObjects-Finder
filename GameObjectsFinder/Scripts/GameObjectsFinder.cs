@@ -39,17 +39,17 @@ namespace HardCodeDev.GameObjectsFinder
     public class GameObjectsFinder : EditorWindow
     {
         #region Variables
-        private Vector2 scrollView;
+        private Vector2 _scrollView;
 
-        private bool enableExtraDebug, saveToJson, clearedByScript, clearedByTag;
+        private bool _enableExtraDebug, _saveToJson, _clearedByScript, _clearedByTag;
 
-        private string gameObjTag, scriptName, JSONpath;
+        private string _gameObjTag, _scriptName, _JSONpath;
 
-        private List<GameObject> findedGameObjsByTag = new(), findedGameObjsByScript = new();
+        private List<GameObject> _findedGameObjsByTag = new(), _findedGameObjsByScript = new();
 
-        private Dictionary<GameObject, Material> defaultMaterialsByTag = new(), defaultMaterialsByScript = new();
+        private Dictionary<GameObject, Material> _defaultMaterialsByTag = new(), _defaultMaterialsByScript = new();
 
-        private Material findedMaterial;
+        private Material _findedMaterial;
         #endregion
 
         #region GUI
@@ -60,33 +60,33 @@ namespace HardCodeDev.GameObjectsFinder
         {
             // Values for GameObjectsFinderDemo scene.
 
-            saveToJson = true;
+            _saveToJson = true;
 
-            gameObjTag = "Player";
-            scriptName = "HardCodeDev.Examples.EmptyDemoScript";
-            JSONpath = "Assets/Data.json";
+            _gameObjTag = "Player";
+            _scriptName = "HardCodeDev.Examples.EmptyDemoScript";
+            _JSONpath = "Assets/Data.json";
         }
 
         private void OnGUI()
         {
-            GUILayout.BeginScrollView(scrollView, true, false);
+            GUILayout.BeginScrollView(_scrollView, true, false);
 
             GUILayout.Label("Base", EditorStyles.boldLabel);
 
-            enableExtraDebug = EditorGUILayout.Toggle(
+            _enableExtraDebug = EditorGUILayout.Toggle(
                 new GUIContent("Enable extra debugging", "Enables additional Debug logs. Turn it on if you need extra debugging (recommended)."),
-                enableExtraDebug);
+                _enableExtraDebug);
 
             EditorGUILayout.Space(5);
 
-            saveToJson = EditorGUILayout.Toggle(
+            _saveToJson = EditorGUILayout.Toggle(
     new GUIContent("Save to JSON", "Automatically saves found GameObjects to JSON by their Global ID, their materials before finding and applied material."),
-    saveToJson);
+    _saveToJson);
 
-            if (saveToJson)
+            if (_saveToJson)
             {
-                JSONpath = EditorGUILayout.TextField(
-                new GUIContent("JSON data save path ", "Example: Assets/Data.json"), JSONpath);
+                _JSONpath = EditorGUILayout.TextField(
+                new GUIContent("JSON data save path ", "Example: Assets/Data.json"), _JSONpath);
 
                 if (GUILayout.Button(
                     new GUIContent("Load JSON data")))
@@ -96,23 +96,23 @@ namespace HardCodeDev.GameObjectsFinder
 
             EditorGUILayout.Space(5);
 
-            findedMaterial = (Material)EditorGUILayout.ObjectField(
+            _findedMaterial = (Material)EditorGUILayout.ObjectField(
                 new GUIContent("Applied material", "Material to apply to found objects."),
-                findedMaterial, typeof(Material), true);
+                _findedMaterial, typeof(Material), true);
 
             EditorGUILayout.Space(10);
 
             GUILayout.Label("Search by Tag", EditorStyles.boldLabel);
-            gameObjTag = EditorGUILayout.TagField(
+            _gameObjTag = EditorGUILayout.TagField(
                 new GUIContent("GameObjects tag", "Tag to search objects by"),
-                gameObjTag);
+                _gameObjTag);
 
             EditorGUILayout.Space(10);
 
             GUILayout.Label("Search by Script", EditorStyles.boldLabel);
-            scriptName = EditorGUILayout.TextField(
+            _scriptName = EditorGUILayout.TextField(
                 new GUIContent("GameObjects full script name", "Full name of the script (with namespace if needed). Example: MyNamespace.MyScript"),
-                scriptName);
+                _scriptName);
 
             EditorGUILayout.Space(10);
 
@@ -138,8 +138,8 @@ namespace HardCodeDev.GameObjectsFinder
         {
             List<GameObject> finded = new();
 
-            finded = type == TypeOfObjects.Tag ? findedGameObjsByTag: findedGameObjsByScript;
-            var cleared = type == TypeOfObjects.Tag ? clearedByTag : clearedByScript;
+            finded = type == TypeOfObjects.Tag ? _findedGameObjsByTag: _findedGameObjsByScript;
+            var cleared = type == TypeOfObjects.Tag ? _clearedByTag : _clearedByScript;
 
             if (finded != null)
             {
@@ -170,37 +170,37 @@ namespace HardCodeDev.GameObjectsFinder
         {
             if (type == TypeOfObjects.Tag)
             {
-                if (gameObjTag != null)
+                if (_gameObjTag != null)
                 {
                     ClearMaterials(TypeOfObjects.Tag, true);
-                    clearedByTag = false;
+                    _clearedByTag = false;
 
                     try
                     {
-                        var gameObjs = GameObject.FindGameObjectsWithTag(gameObjTag);
+                        var gameObjs = GameObject.FindGameObjectsWithTag(_gameObjTag);
                         foreach (var gameObj in gameObjs)
                         {
                             if (gameObj.TryGetComponent(out MeshRenderer renderer))
                             {
-                                if (!defaultMaterialsByTag.ContainsKey(gameObj)) defaultMaterialsByTag[gameObj] = renderer.sharedMaterial;
-                                renderer.sharedMaterial = findedMaterial;
+                                if (!_defaultMaterialsByTag.ContainsKey(gameObj)) _defaultMaterialsByTag[gameObj] = renderer.sharedMaterial;
+                                renderer.sharedMaterial = _findedMaterial;
                             }
-                            findedGameObjsByTag.Add(gameObj);
+                            _findedGameObjsByTag.Add(gameObj);
                         }
-                        if (saveToJson) SaveToJSON();
+                        if (_saveToJson) SaveToJSON();
                     }
                     catch (Exception ex)
                     {
                         Debug.LogError($"The tag does not exist! It may have been deleted. Error message: {ex.Message}");
                     }
 
-                    if (findedGameObjsByTag.Count > 0)
+                    if (_findedGameObjsByTag.Count > 0)
                     {
-                        if (enableExtraDebug) Debug.Log($"<color=green>{findedGameObjsByTag.Count} objects found!");
+                        if (_enableExtraDebug) Debug.Log($"<color=green>{_findedGameObjsByTag.Count} objects found!");
                     }
                     else
                     {
-                        if (enableExtraDebug) Debug.Log("<color=yellow>No objects found!");
+                        if (_enableExtraDebug) Debug.Log("<color=yellow>No objects found!");
                     }
                 }
                 else Debug.LogError("No tag entered in GameObjects tag!"); 
@@ -208,12 +208,12 @@ namespace HardCodeDev.GameObjectsFinder
 
             if (type == TypeOfObjects.Script)
             {
-                if (scriptName != null)
+                if (_scriptName != null)
                 {
                     ClearMaterials(TypeOfObjects.Script, true);
-                    clearedByScript = false;
+                    _clearedByScript = false;
 
-                    Type scriptType = Type.GetType(scriptName);
+                    Type scriptType = Type.GetType(_scriptName);
                     if (scriptType != null)
                     {
                         var scripts = FindObjectsByType(scriptType, FindObjectsSortMode.None);
@@ -225,27 +225,27 @@ namespace HardCodeDev.GameObjectsFinder
                                 GameObject gameObj = component.gameObject;
                                 if (gameObj.TryGetComponent(out MeshRenderer renderer))
                                 {
-                                    if (!defaultMaterialsByScript.ContainsKey(gameObj)) defaultMaterialsByScript[gameObj] = renderer.sharedMaterial;
-                                    renderer.sharedMaterial = findedMaterial;
+                                    if (!_defaultMaterialsByScript.ContainsKey(gameObj)) _defaultMaterialsByScript[gameObj] = renderer.sharedMaterial;
+                                    renderer.sharedMaterial = _findedMaterial;
                                 }
-                                findedGameObjsByScript.Add(gameObj);
+                                _findedGameObjsByScript.Add(gameObj);
                             }
                         }
-                        if(saveToJson)SaveToJSON();
+                        if(_saveToJson)SaveToJSON();
                     }
                     else
                     {
-                        if (enableExtraDebug) Debug.Log("<color=yellow>No objects found with this script.");
+                        if (_enableExtraDebug) Debug.Log("<color=yellow>No objects found with this script.");
                     }
 
-                    if (findedGameObjsByScript.Count > 0)
+                    if (_findedGameObjsByScript.Count > 0)
                     {
-                        if (enableExtraDebug) Debug.Log($"<color=green>{findedGameObjsByScript.Count} objects found!");
+                        if (_enableExtraDebug) Debug.Log($"<color=green>{_findedGameObjsByScript.Count} objects found!");
                     }
 
                     else
                     {
-                        if (enableExtraDebug) Debug.Log("<color=yellow>No objects found with this script.");
+                        if (_enableExtraDebug) Debug.Log("<color=yellow>No objects found with this script.");
                     }
                 }
                 else Debug.LogError("No script name entered in GameObjects script name!"); 
@@ -254,14 +254,14 @@ namespace HardCodeDev.GameObjectsFinder
 
         private void ClearMaterials(TypeOfObjects type, bool isInFinder = false)
         {
-            clearedByScript = type == TypeOfObjects.Tag ? false : true;
-            clearedByTag = type == TypeOfObjects.Tag ? true : false;
+            _clearedByScript = type == TypeOfObjects.Tag ? false : true;
+            _clearedByTag = type == TypeOfObjects.Tag ? true : false;
 
             List<GameObject> findedGameObjs = new();
             Dictionary<GameObject, Material> defaultMaterials = new();
 
-            findedGameObjs = type == TypeOfObjects.Tag ? findedGameObjsByTag : findedGameObjsByScript;
-            defaultMaterials = type == TypeOfObjects.Tag ? defaultMaterialsByTag : defaultMaterialsByScript;
+            findedGameObjs = type == TypeOfObjects.Tag ? _findedGameObjsByTag : _findedGameObjsByScript;
+            defaultMaterials = type == TypeOfObjects.Tag ? _defaultMaterialsByTag : _defaultMaterialsByScript;
 
             if (findedGameObjs.Count != 0)
             {
@@ -272,7 +272,7 @@ namespace HardCodeDev.GameObjectsFinder
                         try
                         {
                             gameObj.GetComponent<MeshRenderer>().sharedMaterial = originalMat;
-                            if (enableExtraDebug && !isInFinder) Debug.Log("<color=green>Materials cleared successfully!");
+                            if (_enableExtraDebug && !isInFinder) Debug.Log("<color=green>Materials cleared successfully!");
                         }
                         catch
                         {
@@ -285,7 +285,7 @@ namespace HardCodeDev.GameObjectsFinder
             }
             else
             {
-                if (enableExtraDebug && !isInFinder) Debug.Log("<color=yellow>No objects found for clearing.");
+                if (_enableExtraDebug && !isInFinder) Debug.Log("<color=yellow>No objects found for clearing.");
             }
         }
         #endregion
@@ -293,26 +293,26 @@ namespace HardCodeDev.GameObjectsFinder
         #region JSON
         private void SaveToJSON() 
         {
-            if (JSONpath != null)
+            if (_JSONpath != null)
             {
                 GlobalID global = new();
 
                 GlobalID globalExisted = new();
-                var jsonExisted = File.ReadAllText(JSONpath);
+                var jsonExisted = File.ReadAllText(_JSONpath);
                 globalExisted = JsonUtility.FromJson<GlobalID>(jsonExisted);
 
-                if (findedGameObjsByScript != null)
+                if (_findedGameObjsByScript != null)
                 {
-                    for (int i = 0; i < findedGameObjsByScript.Count; i++)
+                    for (int i = 0; i < _findedGameObjsByScript.Count; i++)
                     {
                         GlobalIdBasic basic = new();    
-                        var globalId = GlobalObjectId.GetGlobalObjectIdSlow(findedGameObjsByScript[i]).ToString();
+                        var globalId = GlobalObjectId.GetGlobalObjectIdSlow(_findedGameObjsByScript[i]).ToString();
                         basic.globalId = globalId;
 
 
-                        if (findedGameObjsByScript[i].TryGetComponent(out MeshRenderer renderer)) 
+                        if (_findedGameObjsByScript[i].TryGetComponent(out MeshRenderer renderer)) 
                         {
-                            var mat = defaultMaterialsByScript[findedGameObjsByScript[i]];
+                            var mat = _defaultMaterialsByScript[_findedGameObjsByScript[i]];
                             string path = AssetDatabase.GetAssetPath(mat);
                             basic.materialPath = path;
                         }
@@ -320,23 +320,23 @@ namespace HardCodeDev.GameObjectsFinder
                         global.scriptObjects.Add(basic);
                     }
                     
-                    global.findedMat = AssetDatabase.GetAssetPath(findedMaterial);
+                    global.findedMat = AssetDatabase.GetAssetPath(_findedMaterial);
 
-                    if (enableExtraDebug) Debug.Log("<color=green>Found by scrpt objects data saved to JSON successfully!");
+                    if (_enableExtraDebug) Debug.Log("<color=green>Found by scrpt objects data saved to JSON successfully!");
                 }
 
-                if (findedGameObjsByTag != null)
+                if (_findedGameObjsByTag != null)
                 {
-                    for (int i = 0; i < findedGameObjsByTag.Count; i++)
+                    for (int i = 0; i < _findedGameObjsByTag.Count; i++)
                     {
                         GlobalIdBasic basic = new();
-                        var globalId = GlobalObjectId.GetGlobalObjectIdSlow(findedGameObjsByTag[i]).ToString();
+                        var globalId = GlobalObjectId.GetGlobalObjectIdSlow(_findedGameObjsByTag[i]).ToString();
                         basic.globalId = globalId;
 
 
-                        if (findedGameObjsByTag[i].TryGetComponent(out MeshRenderer renderer))
+                        if (_findedGameObjsByTag[i].TryGetComponent(out MeshRenderer renderer))
                         {
-                            var mat = defaultMaterialsByTag[findedGameObjsByTag[i]];
+                            var mat = _defaultMaterialsByTag[_findedGameObjsByTag[i]];
                             string path = AssetDatabase.GetAssetPath(mat);
                             basic.materialPath = path;
                         }
@@ -344,26 +344,26 @@ namespace HardCodeDev.GameObjectsFinder
                         global.tagObjects.Add(basic);
                     }
 
-                    global.findedMat = AssetDatabase.GetAssetPath(findedMaterial);
+                    global.findedMat = AssetDatabase.GetAssetPath(_findedMaterial);
 
-                    if (enableExtraDebug) Debug.Log("<color=green>Found by tag objects data saved to JSON successfully!");
+                    if (_enableExtraDebug) Debug.Log("<color=green>Found by tag objects data saved to JSON successfully!");
                 }
 
                 var updatedJson = JsonUtility.ToJson(global, true);
 
-                File.WriteAllText(JSONpath, updatedJson);
+                File.WriteAllText(_JSONpath, updatedJson);
                 AssetDatabase.Refresh();
-                if (enableExtraDebug) Debug.Log("<color=yellow>No found GameObjects with tag/script.");
+                if (_enableExtraDebug) Debug.Log("<color=yellow>No found GameObjects with tag/script.");
             }
             else Debug.LogError("No JSON path was found!");
         }
 
         private void LoadFromJSON()
         {
-            if (JSONpath != null)
+            if (_JSONpath != null)
             {
                 GlobalID global = new();
-                string json = File.ReadAllText(JSONpath);
+                string json = File.ReadAllText(_JSONpath);
 
                 global = JsonUtility.FromJson<GlobalID>(json);
 
@@ -377,11 +377,11 @@ namespace HardCodeDev.GameObjectsFinder
                         {
                             var go = obj as GameObject;
 
-                            findedGameObjsByScript.Add(go);
+                            _findedGameObjsByScript.Add(go);
 
                             if (go.TryGetComponent(out MeshRenderer renderer)) renderer.sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>(global.findedMat);
                             var loadedMat = AssetDatabase.LoadAssetAtPath<Material>(basic.materialPath);
-                            defaultMaterialsByScript[go] = loadedMat;
+                            _defaultMaterialsByScript[go] = loadedMat;
                         }
                     }
                 }
@@ -396,37 +396,37 @@ namespace HardCodeDev.GameObjectsFinder
                         {
                             var go = obj as GameObject;
 
-                            findedGameObjsByTag.Add(go);
+                            _findedGameObjsByTag.Add(go);
 
                             if (go.TryGetComponent(out MeshRenderer renderer)) renderer.sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>(global.findedMat);
                             var loadedMat = AssetDatabase.LoadAssetAtPath<Material>(basic.materialPath);
-                            defaultMaterialsByTag[go] = loadedMat;
+                            _defaultMaterialsByTag[go] = loadedMat;
                         }
                     }
                 }
 
-                if (findedGameObjsByScript != null || findedGameObjsByTag != null)
+                if (_findedGameObjsByScript != null || _findedGameObjsByTag != null)
                 {
-                    if (enableExtraDebug) Debug.Log("<color=green>Data loaded from JSON successfully!");
+                    if (_enableExtraDebug) Debug.Log("<color=green>Data loaded from JSON successfully!");
                 }
                 else
                 {
-                    if (enableExtraDebug) Debug.Log("<color=yellow>No saved data found in JSON file.");
+                    if (_enableExtraDebug) Debug.Log("<color=yellow>No saved data found in JSON file.");
                 }
             }
             else 
             { 
-                if(saveToJson) Debug.LogError("No JSON path was found!"); 
+                if(_saveToJson) Debug.LogError("No JSON path was found!"); 
             }
         }
 
         private void ClearJSON()
         {
-            if (JSONpath != null && File.Exists(JSONpath))
+            if (_JSONpath != null && File.Exists(_JSONpath))
             {
-                File.WriteAllText(JSONpath, "{}");
+                File.WriteAllText(_JSONpath, "{}");
                 AssetDatabase.Refresh();
-                if (enableExtraDebug) Debug.Log("<color=green>JSON cleared successfully!");
+                if (_enableExtraDebug) Debug.Log("<color=green>JSON cleared successfully!");
             }
             else Debug.LogError("No JSON path was found or file on this path doesn't exist!"); 
         }
